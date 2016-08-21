@@ -13,10 +13,10 @@ def server_index(request):
     return HttpResponse("Hello, world. You're at the server index.")
 
 @tracer.trace()
-def server_fib(request):
+def django_as_server(request):
     span = tracer.get_span(request)
     if span is not None:
-        with tracer._tracer.start_span("fib client", child_of=span.context) as rpc_span:
+        with tracer._tracer.start_span("flask fib client", child_of=span.context) as rpc_span:
             requests.post(
                     "http://localhost:5000/add",
                     json={"index": 9},

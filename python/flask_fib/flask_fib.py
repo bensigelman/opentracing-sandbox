@@ -1,3 +1,5 @@
+import os
+
 from flask_opentracing import FlaskTracer
 import flask
 import lightstep.tracer
@@ -6,22 +8,14 @@ import requests
 
 from ot_headers import get_outbound_headers
 
+# One-time setup
 app = flask.Flask(__name__)
-
-opentracing.tracer = lightstep.tracer.init_tracer(access_token="KYZXYZ")
+opentracing.tracer = lightstep.tracer.init_tracer(access_token=os.getenv("LS_TOKEN"))
 flask_tracer = FlaskTracer(opentracing.tracer, True, app)
 
 
-def fib_client(index):
-    result_json = requests.post(
-            "http://localhost:5000/add",
-            json={"index": index},
-            headers=get_outbound_headers(flask_tracer)).json()
-    return result_json["val"]
-
-
 @app.route("/add", methods=['POST'])
-def add():
+def fibonacci_add():
     """
     A recursive fibonnaci helper.
     """
@@ -37,6 +31,14 @@ def add():
         val_r = fib_client(index - 2)
         active_span.log_event("return l+r", payload={"l": val_l, "r": val_r})
         return ('{"val": %d}\n' % (val_l + val_r,))
+
+
+def fib_client(index):
+    result_json = requests.post(
+            "http://localhost:5000/add",
+            json={"index": index},
+            headers=get_outbound_headers(flask_tracer)).json()
+    return result_json["val"]
 
 
 app.run(threaded=True)

@@ -13,16 +13,14 @@ def client_index(request):
     return HttpResponse("Client index page")
 
 @tracer.trace()
-def client_fib(request):
+def django_as_client(request):
     url = "http://localhost:8000/server/fib"
     new_request = urllib2.Request(url)
     current_span = tracer.get_span(request)
     _inject_as_headers(current_span, new_request)
     try:
         response = urllib2.urlopen(new_request)
-        return HttpResponse(
-                "Sent a fib request to django server; response=%s" %
-                str(response))
+        return HttpResponse("Sent a fib request to django server")
     except urllib2.URLError as e:  
         return HttpResponse("Error: " + str(e))
 

@@ -117,7 +117,7 @@ STATIC_URL = '/static/'
 # OpenTracing settings
 
 # default tracer is opentracing.Tracer(), which does nothing
-OPENTRACING_TRACER = django_opentracing.DjangoTracer(lightstep.tracer.init_tracer(group_name="django_app", access_token="XYZXYZ"))
+OPENTRACING_TRACER = django_opentracing.DjangoTracer(lightstep.tracer.init_tracer(group_name="django_app", access_token=os.getenv("LS_TOKEN")))
 
 # default is False
 OPENTRACING_TRACE_ALL = False 
