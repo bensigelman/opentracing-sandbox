@@ -78,7 +78,7 @@ Tracer.initGlobalTracer(LightStep.tracer({
   xhr_instrumentation : false,
 }));
 
-$(".uuid").html("Your client's unique(ish) id: <strong>" + clientUUID + "</strong>");
+$(".uuid").html("Your web client's id: <strong>" + clientUUID + "</strong>");
 
 $(".donut-button").click(function(evt) {
   var span = Tracer.startSpan('get_donuts');
