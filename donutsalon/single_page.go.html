@@ -1,59 +1,63 @@
 <html>
-<meta charset="ISO-8859-1">
+  <meta charset="ISO-8859-1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <head>
-    <title>On-Stage Demo</title>
+    <title>DonutSalon: DaaS HyperGrowth Realized</title>
     <script src="/public/opentracing-browser.js"></script>
     <script src="/public/lightstep-tracer.js"></script>
     <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
-  <style>
-    .donut { margin-top: 4px; margin-bottom: 4px; }
-  </style>
+    <style>
+.donut { margin-top: 4px; margin-bottom: 4px; }
+body { background-image: url("/public/donuts.png"); background-repeat: repeat; }
+    </style>
 
   </head>
   <body>
     <div class="container-fluid">
-        <div id="status">Select a donut</div>
-        <div class="row all-donuts">
-            <div class="col-xs-6 col-md-3 col-lg-2">
-                <button class="btn btn-block btn-default donut" data-flavor="glazed">
-                    glazed
-                </button>
-            </div>
-            <div class="col-xs-6 col-md-3 col-lg-2">
-                <button class="btn btn-block btn-default donut" data-flavor="cinnamon">
-                    cinnamon
-                </button>
-            </div>
-            <div class="col-xs-6 col-md-3 col-lg-2">
-                <button class="btn btn-block btn-default donut" data-flavor="old-fashioned">
-                    old-fashioned
-                </button>
-            </div>
-            <div class="col-xs-6 col-md-3 col-lg-2">
-                <button class="btn btn-block btn-default donut" data-flavor="chocolate">
-                    chocolate
-                </button>
-            </div>
-            <div class="col-xs-6 col-md-3 col-lg-2">
-                <button class="btn btn-block btn-default donut" data-flavor="sprinkles">
-                    sprinkles
-                </button>
-            </div>
-            <div class="col-xs-6 col-md-3 col-lg-2">
-                <button class="btn btn-block btn-default donut" data-flavor="jelly">
-                    jelly
-                </button>
-            </div>
+      <center>
+        <h4>Donuts As A Service (🍩aaS)</h4>
+      </center>
+      <div class="row all-donuts">
+        <div class="col-xs-6 col-md-3 col-lg-2">
+          <button class="btn btn-block btn-default donut" data-flavor="glazed">
+            glazed
+          </button>
         </div>
-        <div id="donut-log">
+        <div class="col-xs-6 col-md-3 col-lg-2">
+          <button class="btn btn-block btn-default donut" data-flavor="cinnamon">
+            cinnamon
+          </button>
         </div>
+        <div class="col-xs-6 col-md-3 col-lg-2">
+          <button class="btn btn-block btn-default donut" data-flavor="old-fashioned">
+            old-fashioned
+          </button>
+        </div>
+        <div class="col-xs-6 col-md-3 col-lg-2">
+          <button class="btn btn-block btn-default donut" data-flavor="chocolate">
+            chocolate
+          </button>
+        </div>
+        <div class="col-xs-6 col-md-3 col-lg-2">
+          <button class="btn btn-block btn-default donut" data-flavor="sprinkles">
+            sprinkles
+          </button>
+        </div>
+        <div class="col-xs-6 col-md-3 col-lg-2">
+          <button class="btn btn-block btn-default donut" data-flavor="jelly">
+            jelly
+          </button>
+        </div>
+      </div>
+      <div id="donut-log">
+      </div>
     </div>
   </body>
 
-    <script>
+  <script>
 
 Tracer.initGlobalTracer(LightStep.tracer({
   access_token        : 'DEVELOPMENT_TOKEN_bhs',
@@ -85,6 +89,6 @@ $(".donut").click(function(evt) {
   });
 });
 
-    </script>
+  </script>
 
 </html>

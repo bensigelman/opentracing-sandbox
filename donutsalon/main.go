@@ -7,6 +7,10 @@ import (
 	"math/rand"
 	"net/http"
 	"time"
+
+	lightstep "github.com/lightstep/lightstep-tracer-go"
+	opentracing "github.com/opentracing/opentracing-go"
+	zipkin "github.com/openzipkin/zipkin-go-opentracing"
 )
 
 const (
@@ -16,6 +20,7 @@ const (
 var (
 	accessToken = flag.String("token", "{your_access_token}", "")
 	port        = flag.Int("port", 80, "")
+	tracerType  = flag.String("tracer_type", "lightstep", "")
 )
 
 func SleepGaussian(d time.Duration) {
@@ -31,11 +36,44 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+
 }
+
+type TracerGenerator func(component string) opentracing.Tracer
 
 func main() {
 	flag.Parse()
-	ds := newDonutService()
+	var tracerGen TracerGenerator
+	if *tracerType == "lightstep" {
+		tracerGen = func(component string) opentracing.Tracer {
+			return lightstep.NewTracer(lightstep.Options{
+				AccessToken: *accessToken,
+				Collector: lightstep.Endpoint{
+					Host: "collector-grpc.lightstep.com",
+					Port: 443,
+				},
+				UseGRPC: true,
+				Tags: opentracing.Tags{
+					lightstep.ComponentNameKey: component,
+				},
+			})
+		}
+	} else if *tracerType == "zipkin" {
+		fmt.Println("BHS Z")
+		tracerGen = func(component string) opentracing.Tracer {
+			collector, _ := zipkin.NewHTTPCollector(
+				fmt.Sprintf("http://donutsalon.com:9411/api/v1/spans"))
+			tracer, _ := zipkin.NewTracer(
+				zipkin.NewRecorder(collector, false, "127.0.0.1:0", component))
+			return tracer
+		}
+		t := tracerGen("foo")
+		sp := t.StartSpan("blah")
+		sp.Finish()
+	} else {
+		panic(*tracerType)
+	}
+	ds := newDonutService(tracerGen)
 
 	// Make fake queries in the background.
 	go func() {

@@ -8,7 +8,6 @@ import (
 
 	"golang.org/x/net/context"
 
-	lightstep "github.com/lightstep/lightstep-tracer-go"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 )
@@ -20,40 +19,32 @@ const (
 )
 
 type DonutService struct {
-	tracer opentracing.Tracer
-	mixer  *Mixer
-	fryer  *Fryer
+	tracer    opentracing.Tracer
+	mixer     *Mixer
+	fryer     *Fryer
+	tracerGen TracerGenerator
 
 	toppersLock sync.Mutex
 	toppers     map[string]*Topper
 }
 
-func newDonutService() *DonutService {
+func newDonutService(tracerGen TracerGenerator) *DonutService {
 	return &DonutService{
-		tracer: lightstep.NewTracer(lightstep.Options{
-			AccessToken: *accessToken,
-			Collector: lightstep.Endpoint{
-				Host: "collector-grpc.lightstep.com",
-				Port: 443,
-			},
-			UseGRPC: true,
-			Tags: opentracing.Tags{
-				lightstep.ComponentNameKey: "donut-webserver",
-			},
-		}),
-		mixer:   newMixer(mixDuration),
-		fryer:   newFryer(fryDuration),
-		toppers: make(map[string]*Topper),
+		tracer:    tracerGen("donut-webserver"),
+		mixer:     newMixer(tracerGen, mixDuration),
+		fryer:     newFryer(tracerGen, fryDuration),
+		toppers:   make(map[string]*Topper),
+		tracerGen: tracerGen,
 	}
 }
 
 func (ds *DonutService) handleRequest(w http.ResponseWriter, r *http.Request) {
+	carrier := opentracing.HTTPHeadersCarrier(r.Header)
+	clientContext, _ := ds.tracer.Extract(opentracing.HTTPHeaders, carrier)
+
 	type params struct {
 		Flavor string `json:"flavor"`
 	}
-
-	carrier := opentracing.HTTPHeadersCarrier(r.Header)
-	clientContext, _ := ds.tracer.Extract(opentracing.HTTPHeaders, carrier)
 
 	p := params{}
 	decoder := json.NewDecoder(r.Body)
@@ -83,7 +74,7 @@ func (ds *DonutService) makeDonut(parentSpanContext opentracing.SpanContext, fla
 	ds.toppersLock.Lock()
 	topper := ds.toppers[flavor]
 	if topper == nil {
-		topper = newTopper(flavor, topDuration)
+		topper = newTopper(ds.tracerGen, flavor, topDuration)
 		ds.toppers[flavor] = topper
 	}
 	ds.toppersLock.Unlock()
