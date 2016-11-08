@@ -1,8 +1,8 @@
 <html>
   <meta charset="ISO-8859-1">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
   <head>
-    <title>DonutSalon: DaaS HyperGrowth Realized</title>
+    <title>DonutSalon: 🍩aaS in HyperGrowth</title>
     <script src="/public/opentracing-browser.js"></script>
     <script src="/public/lightstep-tracer.js"></script>
     <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
@@ -10,54 +10,67 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
     <style>
+.uuid { margin-top: 15px; }
 .donut { margin-top: 4px; margin-bottom: 4px; }
-body { background-image: url("/public/donuts.png"); background-repeat: repeat; }
+.donut-button { margin-top: 10px; margin-bottom: 10px; cursor: pointer; }
+.donut-button:hover { cursor: pointer; filter: brightness(85%); }
+#donut-log { margin-top: 15px; }
     </style>
 
   </head>
   <body>
     <div class="container-fluid">
+      <div class="uuid alert alert-info"></div>
       <center>
-        <h4>Donuts As A Service (🍩aaS)</h4>
+        <h1>🍩aaS</h1>
+        <h4><em>Donuts as a Service</em></h4>
       </center>
       <div class="row all-donuts">
-        <div class="col-xs-6 col-md-3 col-lg-2">
-          <button class="btn btn-block btn-default donut" data-flavor="glazed">
-            glazed
-          </button>
+        <div class="col-xs-4 col-md-3 col-lg-2">
+          <img
+             class="img-thumbnail donut-button"
+             src="/public/donut-glazed.png"
+             data-flavor="glazed">
         </div>
-        <div class="col-xs-6 col-md-3 col-lg-2">
-          <button class="btn btn-block btn-default donut" data-flavor="cinnamon">
-            cinnamon
-          </button>
+        <div class="col-xs-4 col-md-3 col-lg-2">
+          <img
+             class="img-thumbnail donut-button"
+             src="/public/donut-cinn.jpg"
+             data-flavor="cinnamon">
         </div>
-        <div class="col-xs-6 col-md-3 col-lg-2">
-          <button class="btn btn-block btn-default donut" data-flavor="old-fashioned">
-            old-fashioned
-          </button>
+        <div class="col-xs-4 col-md-3 col-lg-2">
+          <img
+             class="img-thumbnail donut-button"
+             src="/public/donut-old-fash.jpg"
+             data-flavor="old-fashioned">
         </div>
-        <div class="col-xs-6 col-md-3 col-lg-2">
-          <button class="btn btn-block btn-default donut" data-flavor="chocolate">
-            chocolate
-          </button>
+        <div class="col-xs-4 col-md-3 col-lg-2">
+          <img
+             class="img-thumbnail donut-button"
+             src="/public/donut-choc.jpg"
+             data-flavor="chocolate">
         </div>
-        <div class="col-xs-6 col-md-3 col-lg-2">
-          <button class="btn btn-block btn-default donut" data-flavor="sprinkles">
-            sprinkles
-          </button>
+        <div class="col-xs-4 col-md-3 col-lg-2">
+          <img
+             class="img-thumbnail donut-button"
+             src="/public/donut-sprinkles.png"
+             data-flavor="sprinkles">
         </div>
-        <div class="col-xs-6 col-md-3 col-lg-2">
-          <button class="btn btn-block btn-default donut" data-flavor="jelly">
-            jelly
-          </button>
+        <div class="col-xs-4 col-md-3 col-lg-2">
+          <img
+             class="img-thumbnail donut-button"
+             src="/public/donut-jelly.jpg"
+             data-flavor="jelly">
         </div>
       </div>
-      <div id="donut-log">
+      <div id="donut-log" class="lead">
       </div>
     </div>
   </body>
 
   <script>
+
+var clientUUID = Math.round(Math.random() * 10000);
 
 Tracer.initGlobalTracer(LightStep.tracer({
   access_token        : 'DEVELOPMENT_TOKEN_bhs',
@@ -65,9 +78,11 @@ Tracer.initGlobalTracer(LightStep.tracer({
   xhr_instrumentation : false,
 }));
 
-$(".donut").click(function(evt) {
+$(".uuid").html("Your client's unique(ish) id: <strong>" + clientUUID + "</strong>");
+
+$(".donut-button").click(function(evt) {
   var span = Tracer.startSpan('get_donuts');
-  span.setBaggageItem('donut_type', 'cinnamon');
+  span.setBaggageItem('donut_origin', 'cinnamon (client ' + clientUUID + ')');
   var flavor = evt.target.dataset.flavor;
   donutHeaders = {};
   console.log(evt);
@@ -84,7 +99,7 @@ $(".donut").click(function(evt) {
     complete: function() {
       var after = Date.now();
       span.finish();
-      freshDonut.html('You got a <b>' + flavor + '</b> 🍩 (and it took ' + (after-before) + 'ms)');
+      freshDonut.html('Received <b>' + flavor + '</b> 🍩 (after ' + (after-before) + 'ms)');
     },
   });
 });

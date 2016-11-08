@@ -22,7 +22,7 @@ func (sl *SmartLock) Lock(activeSpan opentracing.Span) {
 			fmt.Sprintf("Waiting for lock behind %d transactions", waitersLen),
 			sl.waiters)
 	}
-	sl.waiters = append(sl.waiters, activeSpan.BaggageItem(donutTypeKey))
+	sl.waiters = append(sl.waiters, activeSpan.BaggageItem(donutOriginKey))
 	sl.waitersLock.Unlock()
 
 	sl.realLock.Lock()

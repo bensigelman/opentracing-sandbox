@@ -33,6 +33,6 @@ func (t *Topper) SprinkleTopping(ctx context.Context) {
 	defer span.Finish()
 	t.lock.Lock(span)
 	defer t.lock.Unlock()
-	span.LogEvent(fmt.Sprint("starting donut topping: ", span.BaggageItem(donutTypeKey)))
+	span.LogEvent(fmt.Sprint("starting donut topping: ", span.BaggageItem(donutOriginKey)))
 	SleepGaussian(t.duration)
 }

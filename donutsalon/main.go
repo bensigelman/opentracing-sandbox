@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	donutTypeKey = "donut_type"
+	donutOriginKey = "donut_origin"
 )
 
 var (
@@ -92,7 +92,7 @@ func main() {
 				flavor = "cruller"
 			}
 			span := ds.tracer.StartSpan("background_donut")
-			span.SetBaggageItem(donutTypeKey, flavor)
+			span.SetBaggageItem(donutOriginKey, flavor+" (daemon-donuts)")
 			ds.makeDonut(span.Context(), flavor)
 			span.Finish()
 		}

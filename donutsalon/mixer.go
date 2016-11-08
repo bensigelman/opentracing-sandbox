@@ -31,6 +31,6 @@ func (m *Mixer) MixBatter(ctx context.Context) {
 	defer span.Finish()
 	m.lock.Lock(span)
 	defer m.lock.Unlock()
-	span.LogEvent(fmt.Sprint("starting to mix: ", span.BaggageItem(donutTypeKey)))
+	span.LogEvent(fmt.Sprint("starting to mix: ", span.BaggageItem(donutOriginKey)))
 	SleepGaussian(m.duration)
 }

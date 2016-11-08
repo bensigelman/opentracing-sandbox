@@ -31,6 +31,6 @@ func (f *Fryer) FryDonut(ctx context.Context) {
 	defer span.Finish()
 	f.lock.Lock(span)
 	defer f.lock.Unlock()
-	span.LogEvent(fmt.Sprint("starting to fry: ", span.BaggageItem(donutTypeKey)))
+	span.LogEvent(fmt.Sprint("starting to fry: ", span.BaggageItem(donutOriginKey)))
 	SleepGaussian(f.duration)
 }
