@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	opentracing "github.com/opentracing/opentracing-go"
 )
@@ -14,7 +15,7 @@ type SmartLock struct {
 	waitersLock sync.Mutex
 }
 
-func (sl *SmartLock) Lock(activeSpan opentracing.Span) {
+func (sl *SmartLock) Lock(activeSpan opentracing.Span) time.Duration {
 	sl.waitersLock.Lock()
 	waitersLen := len(sl.waiters)
 	if waitersLen > 0 {
@@ -25,6 +26,7 @@ func (sl *SmartLock) Lock(activeSpan opentracing.Span) {
 	sl.waiters = append(sl.waiters, activeSpan.BaggageItem(donutOriginKey))
 	sl.waitersLock.Unlock()
 
+	before := time.Now()
 	sl.realLock.Lock()
 
 	sl.waitersLock.Lock()
@@ -32,6 +34,7 @@ func (sl *SmartLock) Lock(activeSpan opentracing.Span) {
 	sl.waitersLock.Unlock()
 	activeSpan.LogEvent(
 		fmt.Sprintf("Acquired lock with %d transactions waiting behind", behindLen))
+	return time.Now().Sub(before)
 }
 
 func (sl *SmartLock) Unlock() {

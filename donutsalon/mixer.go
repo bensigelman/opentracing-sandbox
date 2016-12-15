@@ -28,6 +28,7 @@ func (m *Mixer) MixBatter(ctx context.Context) {
 		parentSpanContext = parent.Context()
 	}
 	span := m.tracer.StartSpan("mix_batter", opentracing.ChildOf(parentSpanContext))
+	span.SetTag("service", "donut-mixer")
 	defer span.Finish()
 	m.lock.Lock(span)
 	defer m.lock.Unlock()

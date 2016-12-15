@@ -16,9 +16,9 @@ type Topper struct {
 	duration  time.Duration
 }
 
-func newTopper(tracerGen TracerGenerator, donutType string, duration time.Duration) *Topper {
+func newTopper(tracer opentracing.Tracer, donutType string, duration time.Duration) *Topper {
 	return &Topper{
-		tracer:    tracerGen("donut-topper"),
+		tracer:    tracer,
 		donutType: donutType,
 		duration:  duration,
 	}
@@ -29,7 +29,9 @@ func (t *Topper) SprinkleTopping(ctx context.Context) {
 	if parent := opentracing.SpanFromContext(ctx); parent != nil {
 		parentSpanContext = parent.Context()
 	}
-	span := t.tracer.StartSpan(fmt.Sprint("sprinkle_topping: ", t.donutType), opentracing.ChildOf(parentSpanContext))
+	span := t.tracer.StartSpan("sprinkle_topping", opentracing.ChildOf(parentSpanContext))
+	span.SetTag("service", "donut-mixer")
+	span.SetTag("flavor", t.donutType)
 	defer span.Finish()
 	t.lock.Lock(span)
 	defer t.lock.Unlock()

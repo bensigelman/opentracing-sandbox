@@ -11,6 +11,7 @@ import (
 	lightstep "github.com/lightstep/lightstep-tracer-go"
 	opentracing "github.com/opentracing/opentracing-go"
 	zipkin "github.com/openzipkin/zipkin-go-opentracing"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 const (
@@ -59,7 +60,6 @@ func main() {
 			})
 		}
 	} else if *tracerType == "zipkin" {
-		fmt.Println("BHS Z")
 		tracerGen = func(component string) opentracing.Tracer {
 			collector, _ := zipkin.NewHTTPCollector(
 				fmt.Sprintf("http://donutsalon.com:9411/api/v1/spans"))
@@ -67,9 +67,6 @@ func main() {
 				zipkin.NewRecorder(collector, false, "127.0.0.1:0", component))
 			return tracer
 		}
-		t := tracerGen("foo")
-		sp := t.StartSpan("blah")
-		sp.Finish()
 	} else {
 		panic(*tracerType)
 	}
@@ -91,12 +88,15 @@ func main() {
 			case 4:
 				flavor = "cruller"
 			}
-			span := ds.tracer.StartSpan("background_donut")
+			span := ds.tracer.StartSpan("bulk_donut")
+			span.SetTag("service", "background-service")
 			span.SetBaggageItem(donutOriginKey, flavor+" (daemon-donuts)")
 			ds.makeDonut(span.Context(), flavor)
 			span.Finish()
 		}
 	}()
+
+	http.Handle("/metrics", promhttp.Handler())
 
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/make_donut", ds.handleRequest)

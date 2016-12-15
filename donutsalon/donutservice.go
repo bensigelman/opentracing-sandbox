@@ -24,17 +24,19 @@ type DonutService struct {
 	fryer     *Fryer
 	tracerGen TracerGenerator
 
-	toppersLock sync.Mutex
-	toppers     map[string]*Topper
+	toppersLock  sync.Mutex
+	toppers      map[string]*Topper
+	topperTracer opentracing.Tracer
 }
 
 func newDonutService(tracerGen TracerGenerator) *DonutService {
 	return &DonutService{
-		tracer:    tracerGen("donut-webserver"),
-		mixer:     newMixer(tracerGen, mixDuration),
-		fryer:     newFryer(tracerGen, fryDuration),
-		toppers:   make(map[string]*Topper),
-		tracerGen: tracerGen,
+		tracer:       tracerGen("donut-webserver"),
+		mixer:        newMixer(tracerGen, mixDuration),
+		fryer:        newFryer(tracerGen, fryDuration),
+		toppers:      make(map[string]*Topper),
+		tracerGen:    tracerGen,
+		topperTracer: tracerGen("topper"),
 	}
 }
 
@@ -65,6 +67,7 @@ func (ds *DonutService) handleRequest(w http.ResponseWriter, r *http.Request) {
 
 func (ds *DonutService) makeDonut(parentSpanContext opentracing.SpanContext, flavor string) {
 	donutSpan := ds.tracer.StartSpan("make_donut", ext.RPCServerOption(parentSpanContext))
+	donutSpan.SetTag("service", "donut-webserver")
 	defer donutSpan.Finish()
 	ctx := opentracing.ContextWithSpan(context.Background(), donutSpan)
 
@@ -74,7 +77,7 @@ func (ds *DonutService) makeDonut(parentSpanContext opentracing.SpanContext, fla
 	ds.toppersLock.Lock()
 	topper := ds.toppers[flavor]
 	if topper == nil {
-		topper = newTopper(ds.tracerGen, flavor, topDuration)
+		topper = newTopper(ds.topperTracer, flavor, topDuration)
 		ds.toppers[flavor] = topper
 	}
 	ds.toppersLock.Unlock()

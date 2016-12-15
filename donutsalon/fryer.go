@@ -28,9 +28,18 @@ func (f *Fryer) FryDonut(ctx context.Context) {
 		parentSpanContext = parent.Context()
 	}
 	span := f.tracer.StartSpan("fry_donut", opentracing.ChildOf(parentSpanContext))
+	span.SetTag("service", "donut-fryer")
 	defer span.Finish()
-	f.lock.Lock(span)
+	waitDuration := f.lock.Lock(span)
 	defer f.lock.Unlock()
 	span.LogEvent(fmt.Sprint("starting to fry: ", span.BaggageItem(donutOriginKey)))
-	SleepGaussian(f.duration)
+	sleepDuration := f.duration
+	if waitDuration > time.Second*12 {
+		sleepDuration = sleepDuration / 15
+	} else if waitDuration > time.Second*5 {
+		sleepDuration = sleepDuration / 5
+	} else if waitDuration > time.Second*2 {
+		sleepDuration = sleepDuration / 2
+	}
+	SleepGaussian(sleepDuration)
 }
