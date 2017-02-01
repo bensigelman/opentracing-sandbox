@@ -82,7 +82,8 @@ $(".uuid").html("Your web client's id: <strong>" + clientUUID + "</strong>");
 
 $(".donut-button").click(function(evt) {
   var span = Tracer.startSpan('get_donuts');
-  span.setBaggageItem('donut_origin', 'cinnamon (client ' + clientUUID + ')');
+  span.setBaggageItem('flavor', 'cinnamon');
+  span.setBaggageItem('client_id', '' + clientUUID);
   var flavor = evt.target.dataset.flavor;
   donutHeaders = {};
   console.log(evt);

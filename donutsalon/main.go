@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	donutOriginKey = "donut_origin"
+	donutOriginKey = "flavor"
+	clientKey      = "client_id"
 )
 
 var (
