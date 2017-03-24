@@ -30,7 +30,7 @@ func SleepGaussian(d time.Duration) {
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	t, err := template.New("").ParseFiles("github.com/bensigelman/opentracing-sandbox/donutsalon/single_page.go.html")
+	t, err := template.New("").ParseFiles("github.com/bhs/opentracing-sandbox/donutsalon/single_page.go.html")
 	if err != nil {
 		panic(err)
 	}
@@ -97,10 +97,13 @@ func main() {
 		}
 	}()
 
+	go func() {
+	}()
+
 	http.Handle("/metrics", promhttp.Handler())
 
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/make_donut", ds.handleRequest)
-	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("github.com/bensigelman/opentracing-sandbox/donutsalon/public"))))
+	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("github.com/bhs/opentracing-sandbox/donutsalon/public"))))
 	http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
 }
