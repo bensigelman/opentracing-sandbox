@@ -73,17 +73,21 @@
 var clientUUID = Math.round(Math.random() * 10000);
 
 Tracer.initGlobalTracer(LightStep.tracer({
-  access_token        : 'DEVELOPMENT_TOKEN_bhs',
-  component_name      : 'donut-browser',
-  xhr_instrumentation : false,
+  access_token         : 'DEVELOPMENT_TOKEN_bhs',
+  component_name       : 'donut-browser',
+  collector_host       : 'localhost',
+  collector_port       : 9998,
+  collector_encryption : 'none',
+  xhr_instrumentation  : false,
 }));
 
 $(".uuid").html("Your web client's id: <strong>" + clientUUID + "</strong>");
 
 $(".donut-button").click(function(evt) {
   var span = Tracer.startSpan('get_donuts');
-  span.setBaggageItem('donut_origin', 'cinnamon (client ' + clientUUID + ')');
   var flavor = evt.target.dataset.flavor;
+  // span.setBaggageItem('donut_origin', flavor + ' (client ' + clientUUID + ')');
+  span.setBaggageItem('origin', ':: get_donuts[' + flavor + ']');
   donutHeaders = {};
   console.log(evt);
   Tracer.inject(span, Tracer.FORMAT_TEXT_MAP, donutHeaders);

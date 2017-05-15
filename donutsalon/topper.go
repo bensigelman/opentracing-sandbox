@@ -11,7 +11,7 @@ import (
 
 type Topper struct {
 	tracer    opentracing.Tracer
-	lock      SmartLock
+	lock      *SmartLock
 	donutType string
 	duration  time.Duration
 }
@@ -21,6 +21,7 @@ func newTopper(tracerGen TracerGenerator, donutType string, duration time.Durati
 		tracer:    tracerGen("donut-topper"),
 		donutType: donutType,
 		duration:  duration,
+		lock:      NewSmartLock(false),
 	}
 }
 

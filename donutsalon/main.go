@@ -49,8 +49,8 @@ func main() {
 			return lightstep.NewTracer(lightstep.Options{
 				AccessToken: *accessToken,
 				Collector: lightstep.Endpoint{
-					Host: "collector-grpc.lightstep.com",
-					Port: 443,
+					Host: "localhost",
+					Port: 9997,
 				},
 				UseGRPC: true,
 				Tags: opentracing.Tags{
@@ -76,27 +76,29 @@ func main() {
 	ds := newDonutService(tracerGen)
 
 	// Make fake queries in the background.
-	go func() {
-		for _ = range time.Tick(time.Millisecond * 500) {
-			var flavor string
-			switch rand.Int() % 5 {
-			case 0:
-				flavor = "cinnamon"
-			case 1:
-				flavor = "old-fashioned"
-			case 2:
-				flavor = "chocolate"
-			case 3:
-				flavor = "glazed"
-			case 4:
-				flavor = "cruller"
+	/*
+		go func() {
+			for _ = range time.Tick(time.Millisecond * 500) {
+				var flavor string
+				switch rand.Int() % 5 {
+				case 0:
+					flavor = "cinnamon"
+				case 1:
+					flavor = "old-fashioned"
+				case 2:
+					flavor = "chocolate"
+				case 3:
+					flavor = "glazed"
+				case 4:
+					flavor = "cruller"
+				}
+				span := ds.tracer.StartSpan("background_donut")
+				span.SetBaggageItem(donutOriginKey, flavor+" (daemon-donuts)")
+				ds.makeDonut(span.Context(), flavor)
+				span.Finish()
 			}
-			span := ds.tracer.StartSpan("background_donut")
-			span.SetBaggageItem(donutOriginKey, flavor+" (daemon-donuts)")
-			ds.makeDonut(span.Context(), flavor)
-			span.Finish()
-		}
-	}()
+		}()
+	*/
 
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/make_donut", ds.handleRequest)

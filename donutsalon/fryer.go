@@ -11,7 +11,7 @@ import (
 
 type Fryer struct {
 	tracer   opentracing.Tracer
-	lock     SmartLock
+	lock     *SmartLock
 	duration time.Duration
 }
 
@@ -19,6 +19,7 @@ func newFryer(tracerGen TracerGenerator, duration time.Duration) *Fryer {
 	return &Fryer{
 		tracer:   tracerGen("donut-fryer"),
 		duration: duration,
+		lock:     NewSmartLock(true),
 	}
 }
 

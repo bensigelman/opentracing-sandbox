@@ -11,7 +11,7 @@ import (
 
 type Mixer struct {
 	tracer   opentracing.Tracer
-	lock     SmartLock
+	lock     *SmartLock
 	duration time.Duration
 }
 
@@ -19,6 +19,7 @@ func newMixer(tracerGen TracerGenerator, duration time.Duration) *Mixer {
 	return &Mixer{
 		tracer:   tracerGen("donut-mixer"),
 		duration: duration,
+		lock:     NewSmartLock(false),
 	}
 }
 
