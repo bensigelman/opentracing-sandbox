@@ -525,6 +525,9 @@ func (r *Recorder) translateRawSpan(rs basictracer.RawSpan, buffer *reportBuffer
 		Tags:           r.translateTags(rs.Tags),
 		Logs:           r.translateLogs(rs.Logs, buffer),
 	}
+	for baggageKey, baggageVal := range rs.Context.Baggage {
+		s.Tags = append(s.Tags, r.convertToKeyValue(baggageKey, baggageVal))
+	}
 	return s
 }
 
