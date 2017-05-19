@@ -14,8 +14,9 @@
 .donut { margin-top: 4px; margin-bottom: 4px; }
 .donut-button { margin-top: 10px; margin-bottom: 10px; cursor: pointer; }
 .donut-button:hover { cursor: pointer; filter: brightness(85%); }
+.job {display: none;}
 #donut-log { margin-top: 15px; }
-html { background-image: url(/public/donuts.png) }
+body { background-image: url(/public/donuts.png) }
     </style>
 
   </head>
@@ -26,7 +27,12 @@ html { background-image: url(/public/donuts.png) }
         <h1>🍩aaS</h1>
         <h4><em>Donuts as a Service</em></h4>
       </center>
-      <div class="row">
+      <div class="btn-group pull-right">
+        <button id="buy-btn" type="button" class="btn btn-default">Buy</button>
+        <button id="clean-btn" type="button" class="btn btn-default">Clean</button>
+        <button id="restock-btn" type="button" class="btn btn-default">Restock</button>
+      </div>
+      <div id="cleaner" class="row job">
         <div class="col-md-2">
           <div class="img-thumbnail">
             <h3>Status</h3>
@@ -36,11 +42,11 @@ html { background-image: url(/public/donuts.png) }
         <div class="col-md-2">
           <form action="/clean" method="POST">
             <input type="image" width="220" height="220" src="/public/fryer.jpg" class="img-thumbnail" />
-            <input class="btn" type="submit" value="Clean Fryer"/>
+            <input class="btn btn-default" type="submit" value="Clean Fryer"/>
           </form>
         </div>
       </div>
-      <div class="row">
+      <div id="restocker" class="row job">
         <div class="col-md-2">
           <div class="img-thumbnail">
             <h3>Status</h3>
@@ -51,25 +57,25 @@ html { background-image: url(/public/donuts.png) }
           <form action="/restock" method="POST">
             <input type="hidden" name="flavor" value="sprinkles"/>
             <input type="image" src="/public/donut-sprinkles.png" class="img-thumbnail" />
-            <input class="btn" type="submit" value="Restock Sprinkles"/>
+            <input class="btn btn-default" type="submit" value="Restock Sprinkles"/>
           </form>
         </div>
         <div class="col-md-2">
           <form action="/restock" method="POST">
             <input type="hidden" name="flavor" value="cinnamon"/>
             <input type="image" src="/public/donut-cinn.jpg" class="img-thumbnail" />
-            <input class="btn" type="submit" value="Restock Cinnamon"/>
+            <input class="btn btn-default" type="submit" value="Restock Cinnamon"/>
           </form>
         </div>
         <div class="col-md-2">
           <form action="/restock" method="POST">
             <input type="hidden" name="flavor" value="old-fashioned"/>
             <input type="image" src="/public/donut-old-fash.jpg" class="img-thumbnail" />
-            <input class="btn" type="submit" value="Restock Old-Fashioned"/>
+            <input class="btn btn-default" type="submit" value="Restock Old-Fashioned"/>
           </form>
         </div>
       </div>
-      <div class="row">
+      <div id="buyer" class="row job">
         <div class="col-md-2">
           <div class="img-thumbnail">
             <h3>Status</h3>
@@ -144,6 +150,30 @@ $(".donut-button").click(function(evt) {
     },
   });
 });
+
+$(function(){
+  job = localStorage.getItem("job") || "#buyer";
+  $(".job").hide()
+  $(job).show()
+})
+
+$("#buy-btn").click(function(evt) {
+  localStorage.setItem("job","#buyer")
+  $(".job").hide()
+  $("#buyer").show()
+})
+
+$("#clean-btn").click(function(evt) {
+  localStorage.setItem("job","#cleaner")
+  $(".job").hide()
+  $("#cleaner").show()
+})
+
+$("#restock-btn").click(function(evt) {
+  localStorage.setItem("job","#restocker")
+  $(".job").hide()
+  $("#restocker").show()
+})
 
 setInterval(function(){
   console.log("status");
