@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"html/template"
@@ -29,8 +30,12 @@ func SleepGaussian(d time.Duration) {
 	time.Sleep(d + time.Duration((float64(d)/3)*rand.NormFloat64()))
 }
 
+func currentDir() string {
+	// return "github.com/bhs/opentracing-sandbox/donutsalon/"
+	return "./"
+}
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	t, err := template.New("").ParseFiles("github.com/bensigelman/opentracing-sandbox/donutsalon/single_page.go.html")
+	t, err := template.New("").ParseFiles(currentDir() + "single_page.go.html")
 	if err != nil {
 		panic(err)
 	}
@@ -78,32 +83,77 @@ func main() {
 	ds := newDonutService(tracerGen)
 
 	// Make fake queries in the background.
-	/*
-		go func() {
-			for _ = range time.Tick(time.Millisecond * 500) {
-				var flavor string
-				switch rand.Int() % 5 {
-				case 0:
-					flavor = "cinnamon"
-				case 1:
-					flavor = "old-fashioned"
-				case 2:
-					flavor = "chocolate"
-				case 3:
-					flavor = "glazed"
-				case 4:
-					flavor = "cruller"
-				}
-				span := ds.tracer.StartSpan("background_donut")
-				span.SetBaggageItem(donutOriginKey, flavor+" (daemon-donuts)")
-				ds.makeDonut(span.Context(), flavor)
-				span.Finish()
-			}
-		}()
-	*/
+	go runFakeUser(ds)
+	go runFakeRestocker(ds)
+	go runFakeCleaner(ds)
 
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/make_donut", ds.handleRequest)
-	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("github.com/bensigelman/opentracing-sandbox/donutsalon/public"))))
-	http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
+	http.HandleFunc("/status", ds.handleState)
+	http.HandleFunc("/clean", ds.handleClean)
+	http.HandleFunc("/restock", ds.handleRestock)
+	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir(currentDir()+"public/"))))
+	fmt.Println("Starting on :", *port)
+	err := http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
+	fmt.Println("Exiting", err)
+}
+
+func runFakeUser(ds *DonutService) {
+	for _ = range time.Tick(time.Millisecond * 500) {
+		var flavor string
+		switch rand.Int() % 5 {
+		case 0:
+			flavor = "cinnamon"
+		case 1:
+			flavor = "old-fashioned"
+		case 2:
+			flavor = "chocolate"
+		case 3:
+			flavor = "glazed"
+		case 4:
+			flavor = "cruller"
+		}
+		span := ds.tracer.StartSpan("background_donut")
+		span.SetBaggageItem(donutOriginKey, flavor+" (daemon-donuts)")
+		ds.makeDonut(span.Context(), flavor)
+		span.Finish()
+	}
+}
+
+func runFakeRestocker(ds *DonutService) {
+	for _ = range time.Tick(2 * time.Second) {
+		var flavor string
+		switch rand.Int() % 5 {
+		case 0:
+			flavor = "cinnamon"
+		case 1:
+			flavor = "old-fashioned"
+		case 2:
+			flavor = "chocolate"
+		case 3:
+			flavor = "glazed"
+		case 4:
+			flavor = "cruller"
+		}
+		span := ds.tracer.StartSpan("background_restocker")
+		span.SetBaggageItem(donutOriginKey, flavor+" (daemon-donuts)")
+		ds.restock(span.Context(), flavor)
+		span.Finish()
+	}
+}
+
+func runFakeCleaner(ds *DonutService) {
+	for _ = range time.Tick(4 * time.Second) {
+		span := ds.tracer.StartSpan("background_cleaner")
+		ds.cleanFryer(span.Context())
+		span.Finish()
+	}
+}
+
+func startSpanFronContext(name string, tracer opentracing.Tracer, ctx context.Context) opentracing.Span {
+	var parentSpanContext opentracing.SpanContext
+	if parent := opentracing.SpanFromContext(ctx); parent != nil {
+		parentSpanContext = parent.Context()
+	}
+	return tracer.StartSpan(name, opentracing.ChildOf(parentSpanContext))
 }

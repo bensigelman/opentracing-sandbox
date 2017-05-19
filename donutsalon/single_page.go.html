@@ -27,6 +27,26 @@
       </center>
       <div class="row all-donuts">
         <div class="col-xs-4 col-md-3 col-lg-2">
+          <div>Status</div>
+          <div id="status"></div>
+          <form action="/clean" method="POST">
+            <input type="submit" value="Clean Fryer"/>
+          </form>
+          <form action="/restock" method="POST">
+            <select name="flavor">
+              <option value="glazed">glazed</option>
+              <option value="cinnamon">cinnamon</option>
+              <option value="old-fashioned">old-fashioned</option>
+              <option value="chocolate">chocolate</option>
+              <option value="sprinkles">sprinkles</option>
+              <option value="jelly">jelly</option>
+            </select>
+            <input type="submit" value="Restock"/>
+          </form>
+        </div>
+      </div>
+      <div class="row all-donuts">
+        <div class="col-xs-4 col-md-3 col-lg-2">
           <img
              class="img-thumbnail donut-button"
              src="/public/donut-glazed.png"
@@ -100,13 +120,30 @@ $(".donut-button").click(function(evt) {
     }),
     headers: donutHeaders,
     method: 'POST',
-    complete: function() {
+    success: function() {
       var after = Date.now();
       span.finish();
       freshDonut.html('Received <b>' + flavor + '</b> 🍩 (after ' + (after-before) + 'ms)');
     },
+    error: function() {
+      var after = Date.now();
+      span.finish();
+      freshDonut.html('<span style="color:#aa3333">Out of <b>' + flavor + '</b> 🍩</span>');
+    },
   });
 });
+
+setInterval(function(){
+  console.log("status");
+  $.ajax('/status', {
+    method: 'GET',
+    success: function(status_json) {
+      console.log(status_json);
+      $('#status').text(status_json);
+    },
+  });
+},2000);
+
 
   </script>
 
