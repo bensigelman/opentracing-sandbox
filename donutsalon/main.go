@@ -15,15 +15,18 @@ import (
 )
 
 const (
-	donutOriginKey = "donut_origin"
+	donutOriginKey = "origin"
 )
 
 var (
-	accessToken   = flag.String("token", "{your_access_token}", "")
-	collectorHost = flag.String("collector_host", "localhost", "")
-	collectorPort = flag.Int("collector_port", 9997, "")
-	port          = flag.Int("port", 80, "")
-	tracerType    = flag.String("tracer_type", "lightstep", "")
+	accessToken        = flag.String("token", "{your_access_token}", "")
+	port               = flag.Int("port", 80, "")
+	collectorHost      = flag.String("collector_host", "localhost", "")
+	collectorPort      = flag.Int("collector_port", 9997, "")
+	tracerType         = flag.String("tracer_type", "lightstep", "")
+	orderProcesses     = flag.Int("order", 6, "")
+	restockerProcesses = flag.Int("restock", 3, "")
+	cleanerProcesses   = flag.Int("clean", 1, "")
 )
 
 func SleepGaussian(d time.Duration) {
@@ -83,9 +86,9 @@ func main() {
 	ds := newDonutService(tracerGen)
 
 	// Make fake queries in the background.
-	go runFakeUser(ds)
-	go runFakeRestocker(ds)
-	go runFakeCleaner(ds)
+	backgroundProcess(*orderProcesses, ds, runFakeUser)
+	backgroundProcess(*restockerProcesses, ds, runFakeRestocker)
+	backgroundProcess(*cleanerProcesses, ds, runFakeCleaner)
 
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/make_donut", ds.handleRequest)
@@ -98,52 +101,42 @@ func main() {
 	fmt.Println("Exiting", err)
 }
 
-func runFakeUser(ds *DonutService) {
-	for _ = range time.Tick(time.Millisecond * 500) {
+func backgroundProcess(max int, ds *DonutService, f func(flavor string, ds *DonutService)) {
+	for i := 0; i < max; i++ {
 		var flavor string
-		switch rand.Int() % 5 {
+		switch i % 3 {
 		case 0:
 			flavor = "cinnamon"
 		case 1:
 			flavor = "old-fashioned"
 		case 2:
-			flavor = "chocolate"
-		case 3:
-			flavor = "glazed"
-		case 4:
-			flavor = "cruller"
+			flavor = "sprinkles"
 		}
-		span := ds.tracer.StartSpan("background_donut")
-		span.SetBaggageItem(donutOriginKey, flavor+" (daemon-donuts)")
+		go f(flavor, ds)
+	}
+}
+
+func runFakeUser(flavor string, ds *DonutService) {
+	for {
+		SleepGaussian(250 * time.Millisecond)
+		span := ds.tracer.StartSpan(fmt.Sprintf("background_order[%s]", flavor))
 		ds.makeDonut(span.Context(), flavor)
 		span.Finish()
 	}
 }
 
-func runFakeRestocker(ds *DonutService) {
-	for _ = range time.Tick(2 * time.Second) {
-		var flavor string
-		switch rand.Int() % 5 {
-		case 0:
-			flavor = "cinnamon"
-		case 1:
-			flavor = "old-fashioned"
-		case 2:
-			flavor = "chocolate"
-		case 3:
-			flavor = "glazed"
-		case 4:
-			flavor = "cruller"
-		}
-		span := ds.tracer.StartSpan("background_restocker")
-		span.SetBaggageItem(donutOriginKey, flavor+" (daemon-donuts)")
+func runFakeRestocker(flavor string, ds *DonutService) {
+	for {
+		SleepGaussian(500 * time.Millisecond)
+		span := ds.tracer.StartSpan(fmt.Sprintf("background_restocker[%s]", flavor))
 		ds.restock(span.Context(), flavor)
 		span.Finish()
 	}
 }
 
-func runFakeCleaner(ds *DonutService) {
-	for _ = range time.Tick(4 * time.Second) {
+func runFakeCleaner(flavor string, ds *DonutService) {
+	for {
+		SleepGaussian(time.Second)
 		span := ds.tracer.StartSpan("background_cleaner")
 		ds.cleanFryer(span.Context())
 		span.Finish()
