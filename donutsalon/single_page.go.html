@@ -15,6 +15,7 @@
 .donut-button { margin-top: 10px; margin-bottom: 10px; cursor: pointer; }
 .donut-button:hover { cursor: pointer; filter: brightness(85%); }
 #donut-log { margin-top: 15px; }
+html { background-image: url(/public/donuts.png) }
     </style>
 
   </head>
@@ -25,37 +26,69 @@
         <h1>🍩aaS</h1>
         <h4><em>Donuts as a Service</em></h4>
       </center>
-      <div class="row all-donuts">
-        <div class="col-xs-4 col-md-3 col-lg-2">
-          <div>Status</div>
-          <div id="status"></div>
+      <div class="row">
+        <div class="col-md-2">
+          <div class="img-thumbnail">
+            <h3>Status</h3>
+            <div class="status"></div>
+          </div>
+        </div>
+        <div class="col-md-2">
           <form action="/clean" method="POST">
-            <input type="submit" value="Clean Fryer"/>
-          </form>
-          <form action="/restock" method="POST">
-            <select name="flavor">
-              <option value="cinnamon">cinnamon</option>
-              <option value="old-fashioned">old-fashioned</option>
-              <option value="sprinkles">sprinkles</option>
-            </select>
-            <input type="submit" value="Restock"/>
+            <input type="image" width="220" height="220" src="/public/fryer.jpg" class="img-thumbnail" />
+            <input class="btn" type="submit" value="Clean Fryer"/>
           </form>
         </div>
       </div>
-      <div class="row all-donuts">
-        <div class="col-xs-4 col-md-3 col-lg-2">
+      <div class="row">
+        <div class="col-md-2">
+          <div class="img-thumbnail">
+            <h3>Status</h3>
+            <div class="status"></div>
+          </div>
+        </div>      
+        <div class="col-md-2">
+          <form action="/restock" method="POST">
+            <input type="hidden" name="flavor" value="sprinkles"/>
+            <input type="image" src="/public/donut-sprinkles.png" class="img-thumbnail" />
+            <input class="btn" type="submit" value="Restock Sprinkles"/>
+          </form>
+        </div>
+        <div class="col-md-2">
+          <form action="/restock" method="POST">
+            <input type="hidden" name="flavor" value="cinnamon"/>
+            <input type="image" src="/public/donut-cinn.jpg" class="img-thumbnail" />
+            <input class="btn" type="submit" value="Restock Cinnamon"/>
+          </form>
+        </div>
+        <div class="col-md-2">
+          <form action="/restock" method="POST">
+            <input type="hidden" name="flavor" value="old-fashioned"/>
+            <input type="image" src="/public/donut-old-fash.jpg" class="img-thumbnail" />
+            <input class="btn" type="submit" value="Restock Old-Fashioned"/>
+          </form>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-2">
+          <div class="img-thumbnail">
+            <h3>Status</h3>
+            <div class="status"></div>
+          </div>
+        </div>  
+        <div class="col-md-2">
           <img
              class="img-thumbnail donut-button"
              src="/public/donut-sprinkles.png"
              data-flavor="sprinkles">
         </div>
-        <div class="col-xs-4 col-md-3 col-lg-2">
+        <div class="col-md-2">
           <img
              class="img-thumbnail donut-button"
              src="/public/donut-cinn.jpg"
              data-flavor="cinnamon">
         </div>
-        <div class="col-xs-4 col-md-3 col-lg-2">
+        <div class="col-md-2">
           <img
              class="img-thumbnail donut-button"
              src="/public/donut-old-fash.jpg"
@@ -118,7 +151,7 @@ setInterval(function(){
     method: 'GET',
     success: function(status_json) {
       console.log(status_json);
-      $('#status').text(status_json);
+      $('.status').text(status_json);
     },
   });
 },2000);
