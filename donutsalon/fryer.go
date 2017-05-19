@@ -13,6 +13,7 @@ type Fryer struct {
 	tracer   opentracing.Tracer
 	lock     *SmartLock
 	duration time.Duration
+	oilLevel int
 }
 
 func newFryer(tracerGen TracerGenerator, duration time.Duration) *Fryer {
@@ -24,14 +25,34 @@ func newFryer(tracerGen TracerGenerator, duration time.Duration) *Fryer {
 }
 
 func (f *Fryer) FryDonut(ctx context.Context) {
-	var parentSpanContext opentracing.SpanContext
-	if parent := opentracing.SpanFromContext(ctx); parent != nil {
-		parentSpanContext = parent.Context()
-	}
-	span := f.tracer.StartSpan("fry_donut", opentracing.ChildOf(parentSpanContext))
+	span := startSpanFronContext("fry_donut", f.tracer, ctx)
 	defer span.Finish()
+
 	f.lock.Lock(span)
 	defer f.lock.Unlock()
+
 	span.LogEvent(fmt.Sprint("starting to fry: ", span.BaggageItem(donutOriginKey)))
-	SleepGaussian(f.duration)
+	SleepGaussian(f.duration + time.Duration(f.oilLevel)*time.Millisecond)
+	f.oilLevel++
+}
+
+func (f *Fryer) ChangeOil(ctx context.Context) {
+	span := startSpanFronContext("change_oil", f.tracer, ctx)
+	defer span.Finish()
+
+	f.lock.Lock(span)
+	defer f.lock.Unlock()
+
+	SleepGaussian(f.duration * 10)
+	f.oilLevel = f.oilLevel / 2
+}
+
+func (f *Fryer) OilLevel() int {
+	span := f.tracer.StartSpan("oil_level")
+	defer span.Finish()
+
+	f.lock.Lock(span)
+	defer f.lock.Unlock()
+
+	return f.oilLevel
 }
