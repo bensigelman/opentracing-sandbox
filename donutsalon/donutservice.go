@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sync"
 	"time"
 
 	"golang.org/x/net/context"
@@ -27,17 +26,18 @@ type DonutService struct {
 	fryer     *Fryer
 	tracerGen TracerGenerator
 
-	toppersLock sync.Mutex
+	toppersLock *SmartLock
 	toppers     map[string]*Topper
 }
 
 func newDonutService(tracerGen TracerGenerator) *DonutService {
 	return &DonutService{
-		tracer:    tracerGen("donut-webserver"),
-		payer:     NewPayer(tracerGen, payDuration),
-		fryer:     newFryer(tracerGen, fryDuration),
-		toppers:   make(map[string]*Topper),
-		tracerGen: tracerGen,
+		tracer:      tracerGen("donut-webserver"),
+		payer:       NewPayer(tracerGen, payDuration),
+		fryer:       newFryer(tracerGen, fryDuration),
+		toppers:     make(map[string]*Topper),
+		toppersLock: NewSmartLock(true),
+		tracerGen:   tracerGen,
 	}
 }
 
@@ -97,15 +97,19 @@ func (ds *DonutService) makeDonut(parentSpanContext opentracing.SpanContext, fla
 
 	ds.payer.BuyDonut(ctx)
 	ds.fryer.FryDonut(ctx)
+	return ds.addTopping(donutSpan, flavor)
+}
 
-	ds.toppersLock.Lock()
+func (ds *DonutService) addTopping(span opentracing.Span, flavor string) error {
+	ds.toppersLock.Lock(span)
 	topper := ds.toppers[flavor]
 	if topper == nil {
 		topper = newTopper(ds.tracerGen, flavor, topDuration)
 		ds.toppers[flavor] = topper
 	}
 	ds.toppersLock.Unlock()
-	return topper.SprinkleTopping(ctx)
+
+	return topper.SprinkleTopping(opentracing.ContextWithSpan(context.Background(), span))
 }
 
 func (ds *DonutService) cleanFryer(parentSpanContext opentracing.SpanContext) {
@@ -118,12 +122,14 @@ func (ds *DonutService) cleanFryer(parentSpanContext opentracing.SpanContext) {
 
 func (ds *DonutService) inventory() map[string]int {
 	inventory := make(map[string]int)
+	span := ds.tracer.StartSpan("inventory")
+	defer span.Finish()
 
-	ds.toppersLock.Lock()
-	defer ds.toppersLock.Unlock()
+	ds.toppersLock.Lock(span)
 	for flavor, topper := range ds.toppers {
-		inventory[flavor] = topper.Quantity()
+		inventory[flavor] = topper.Quantity(span)
 	}
+	ds.toppersLock.Unlock()
 
 	return inventory
 }
@@ -133,14 +139,13 @@ func (ds *DonutService) restock(parentSpanContext opentracing.SpanContext, flavo
 	defer donutSpan.Finish()
 	ctx := opentracing.ContextWithSpan(context.Background(), donutSpan)
 
-	ds.toppersLock.Lock()
-	defer ds.toppersLock.Unlock()
-
+	ds.toppersLock.Lock(donutSpan)
 	topper := ds.toppers[flavor]
 	if topper == nil {
 		topper = newTopper(ds.tracerGen, flavor, topDuration)
 		ds.toppers[flavor] = topper
 	}
+	ds.toppersLock.Unlock()
 
 	topper.Restock(ctx)
 }

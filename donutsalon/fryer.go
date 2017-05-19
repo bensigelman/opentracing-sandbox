@@ -51,8 +51,5 @@ func (f *Fryer) OilLevel() int {
 	span := f.tracer.StartSpan("oil_level")
 	defer span.Finish()
 
-	f.lock.Lock(span)
-	defer f.lock.Unlock()
-
 	return f.oilLevel
 }

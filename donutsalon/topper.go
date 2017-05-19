@@ -57,12 +57,9 @@ func (t *Topper) Restock(ctx context.Context) {
 	t.quantity++
 }
 
-func (t *Topper) Quantity() int {
-	span := t.tracer.StartSpan(fmt.Sprint("checking_quantity: ", t.donutType))
+func (t *Topper) Quantity(parentSpan opentracing.Span) int {
+	span := t.tracer.StartSpan(fmt.Sprint("checking_quantity: ", t.donutType), opentracing.ChildOf(parentSpan.Context()))
 	defer span.Finish()
-
-	t.lock.Lock(span)
-	defer t.lock.Unlock()
 
 	return t.quantity
 }
