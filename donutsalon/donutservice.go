@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -44,23 +45,22 @@ func (ds *DonutService) handleRequest(w http.ResponseWriter, r *http.Request) {
 	carrier := opentracing.HTTPHeadersCarrier(r.Header)
 	clientContext, _ := ds.tracer.Extract(opentracing.HTTPHeaders, carrier)
 
-	type params struct {
+	p := struct {
 		Flavor string `json:"flavor"`
+	}{}
+	unmarshalJSON(r.Body, &p)
+	if p.Flavor == "" {
+		panic("flavor not set")
 	}
 
-	p := params{}
-	unmarshalJSON(r.Body, &p)
-	flavor := "plain"
-	if len(p.Flavor) > 0 {
-		flavor = p.Flavor
-	}
-	err := ds.makeDonut(clientContext, flavor)
+	span := ds.tracer.StartSpan(fmt.Sprintf("order_donut[%s]", p.Flavor), ext.RPCServerOption(clientContext))
+	defer span.Finish()
+
+	err := ds.makeDonut(span.Context(), p.Flavor)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	w.Write([]byte("\n"))
 }
 
 func (ds *DonutService) handleState(w http.ResponseWriter, r *http.Request) {
@@ -78,17 +78,15 @@ func (ds *DonutService) handleState(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ds *DonutService) handleClean(w http.ResponseWriter, r *http.Request) {
-	carrier := opentracing.HTTPHeadersCarrier(r.Header)
-	clientContext, _ := ds.tracer.Extract(opentracing.HTTPHeaders, carrier)
-	ds.cleanFryer(clientContext)
+	span := ds.tracer.StartSpan("cleaner")
+	ds.cleanFryer(span.Context())
 	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 }
 
 func (ds *DonutService) handleRestock(w http.ResponseWriter, r *http.Request) {
-	carrier := opentracing.HTTPHeadersCarrier(r.Header)
-	clientContext, _ := ds.tracer.Extract(opentracing.HTTPHeaders, carrier)
 	flavor := r.FormValue("flavor")
-	ds.restock(clientContext, flavor)
+	span := ds.tracer.StartSpan(fmt.Sprintf("restocker[%s]", flavor))
+	ds.restock(span.Context(), flavor)
 	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 }
 
