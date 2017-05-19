@@ -18,9 +18,11 @@ const (
 )
 
 var (
-	accessToken = flag.String("token", "{your_access_token}", "")
-	port        = flag.Int("port", 80, "")
-	tracerType  = flag.String("tracer_type", "lightstep", "")
+	accessToken   = flag.String("token", "{your_access_token}", "")
+	collectorHost = flag.String("collector_host", "localhost", "")
+	collectorPort = flag.Int("collector_port", 9997, "")
+	port          = flag.Int("port", 80, "")
+	tracerType    = flag.String("tracer_type", "lightstep", "")
 )
 
 func SleepGaussian(d time.Duration) {
@@ -49,8 +51,8 @@ func main() {
 			return lightstep.NewTracer(lightstep.Options{
 				AccessToken: *accessToken,
 				Collector: lightstep.Endpoint{
-					Host: "localhost",
-					Port: 9997,
+					Host: *collectorHost,
+					Port: *collectorPort,
 				},
 				UseGRPC: true,
 				Tags: opentracing.Tags{
