@@ -69,7 +69,6 @@ func main() {
 			})
 		}
 	} else if *tracerType == "zipkin" {
-		fmt.Println("BHS Z")
 		tracerGen = func(component string) opentracing.Tracer {
 			collector, _ := zipkin.NewHTTPCollector(
 				fmt.Sprintf("http://donutsalon.com:9411/api/v1/spans"))

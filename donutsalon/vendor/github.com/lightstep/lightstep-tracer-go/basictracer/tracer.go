@@ -102,7 +102,6 @@ func (t *tracerImpl) StartSpanWithOptions(
 	sp.raw.Context.Baggage = map[string]string{
 		"origin": fmt.Sprintf(":: %s", operationName),
 	}
-	fmt.Println("BHS BHS 0")
 ReferencesLoop:
 	for _, ref := range opts.References {
 		switch ref.Type {
@@ -114,7 +113,6 @@ ReferencesLoop:
 			sp.raw.Context.SpanID = randomID()
 			sp.raw.ParentSpanID = refCtx.SpanID
 
-			fmt.Println("BHS BHS 1: ", refCtx.Baggage)
 			if l := len(refCtx.Baggage); l > 0 {
 				sp.raw.Context.Baggage = make(map[string]string, l)
 				for k, v := range refCtx.Baggage {
@@ -124,7 +122,6 @@ ReferencesLoop:
 					sp.raw.Context.Baggage[k] = v
 				}
 			}
-			fmt.Println("BHS BHS 2: ", sp.raw.Context.Baggage)
 			break ReferencesLoop
 		}
 	}
