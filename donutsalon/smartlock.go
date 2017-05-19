@@ -16,8 +16,10 @@ var (
 type SmartLock struct {
 	realLock sync.Mutex
 
-	lockID string
-	cont   bool
+	lockID     string
+	cont       bool
+	acquired   time.Time
+	activeSpan opentracing.Span
 }
 
 func NewSmartLock(cont bool) *SmartLock {
@@ -29,13 +31,16 @@ func NewSmartLock(cont bool) *SmartLock {
 }
 
 func (sl *SmartLock) Lock(activeSpan opentracing.Span) {
+	sl.activeSpan = activeSpan
 	if sl.cont {
-		fmt.Println("BHS60", sl.lockID)
-		activeSpan.SetTag("c:", sl.lockID)
+		sl.activeSpan.SetTag("c:", sl.lockID)
 	}
 	sl.realLock.Lock()
+	sl.acquired = time.Now()
 }
 
 func (sl *SmartLock) Unlock() {
 	sl.realLock.Unlock()
+	released := time.Now()
+	sl.activeSpan.SetTag("weight", int(released.Sub(sl.acquired).Seconds()*1000.0+1))
 }
