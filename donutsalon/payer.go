@@ -30,5 +30,5 @@ func (m *Payer) BuyDonut(ctx context.Context) {
 	defer span.Finish()
 
 	span.LogEvent(fmt.Sprint("Order: ", span.BaggageItem(donutOriginKey)))
-	SleepGaussian(m.duration)
+	SleepGaussian(m.duration, 1)
 }

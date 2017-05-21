@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	opentracing "github.com/opentracing/opentracing-go"
@@ -14,12 +15,12 @@ var (
 )
 
 type SmartLock struct {
-	realLock sync.Mutex
-
-	lockID     string
-	cont       bool
-	acquired   time.Time
-	activeSpan opentracing.Span
+	realLock    sync.Mutex
+	queueLength int64
+	lockID      string
+	cont        bool
+	acquired    time.Time
+	activeSpan  opentracing.Span
 }
 
 func NewSmartLock(cont bool) *SmartLock {
@@ -35,7 +36,9 @@ func (sl *SmartLock) Lock(activeSpan opentracing.Span) {
 	if sl.cont {
 		sl.activeSpan.SetTag("c:", sl.lockID)
 	}
+	atomic.AddInt64(&sl.queueLength, 1)
 	sl.realLock.Lock()
+	atomic.AddInt64(&sl.queueLength, -1)
 	sl.acquired = time.Now()
 }
 
@@ -43,4 +46,8 @@ func (sl *SmartLock) Unlock() {
 	sl.realLock.Unlock()
 	released := time.Now()
 	sl.activeSpan.SetTag("weight", int(released.Sub(sl.acquired).Seconds()*1000.0+1))
+}
+
+func (sl *SmartLock) QueueLength() float64 {
+	return float64(sl.queueLength)
 }
