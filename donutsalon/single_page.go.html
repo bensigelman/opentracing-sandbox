@@ -17,6 +17,133 @@
 .job {display: none;}
 #donut-log { margin-top: 15px; }
 body { background-image: url(/public/donuts.png) }
+.spinner{
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top:0;
+  left:0;
+  background: rgba(200,200,200,.4);
+}
+/* All the nonsense below is for the loading graphic */
+.bubblingG {
+  position: absolute;
+  top: 35%;
+  left: 35%;  
+	text-align: center;
+	width:78px;
+	height:49px;
+	margin: auto;
+}
+.bubblingG span {
+	display: inline-block;
+	vertical-align: middle;
+	width: 10px;
+	height: 10px;
+	margin: 24px auto;
+	background: rgb(0,0,0);
+	border-radius: 49px;
+		-o-border-radius: 49px;
+		-ms-border-radius: 49px;
+		-webkit-border-radius: 49px;
+		-moz-border-radius: 49px;
+	animation: bubblingG 1.5s infinite alternate;
+		-o-animation: bubblingG 1.5s infinite alternate;
+		-ms-animation: bubblingG 1.5s infinite alternate;
+		-webkit-animation: bubblingG 1.5s infinite alternate;
+		-moz-animation: bubblingG 1.5s infinite alternate;
+}
+#bubblingG_1 {
+	animation-delay: 0s;
+		-o-animation-delay: 0s;
+		-ms-animation-delay: 0s;
+		-webkit-animation-delay: 0s;
+		-moz-animation-delay: 0s;
+}
+#bubblingG_2 {
+	animation-delay: 0.45s;
+		-o-animation-delay: 0.45s;
+		-ms-animation-delay: 0.45s;
+		-webkit-animation-delay: 0.45s;
+		-moz-animation-delay: 0.45s;
+}
+#bubblingG_3 {
+	animation-delay: 0.9s;
+		-o-animation-delay: 0.9s;
+		-ms-animation-delay: 0.9s;
+		-webkit-animation-delay: 0.9s;
+		-moz-animation-delay: 0.9s;
+}
+@keyframes bubblingG {
+	0% {
+		width: 10px;
+		height: 10px;
+		background-color:rgb(0,0,0);
+		transform: translateY(0);
+	}
+	100% {
+		width: 23px;
+		height: 23px;
+		background-color:rgb(255,255,255);
+		transform: translateY(-20px);
+	}
+}
+@-o-keyframes bubblingG {
+	0% {
+		width: 10px;
+		height: 10px;
+		background-color:rgb(0,0,0);
+		-o-transform: translateY(0);
+	}
+	100% {
+		width: 23px;
+		height: 23px;
+		background-color:rgb(255,255,255);
+		-o-transform: translateY(-20px);
+	}
+}
+@-ms-keyframes bubblingG {
+	0% {
+		width: 10px;
+		height: 10px;
+		background-color:rgb(0,0,0);
+		-ms-transform: translateY(0);
+	}
+	100% {
+		width: 23px;
+		height: 23px;
+		background-color:rgb(255,255,255);
+		-ms-transform: translateY(-20px);
+	}
+}
+@-webkit-keyframes bubblingG {
+	0% {
+		width: 10px;
+		height: 10px;
+		background-color:rgb(0,0,0);
+		-webkit-transform: translateY(0);
+	}
+	100% {
+		width: 23px;
+		height: 23px;
+		background-color:rgb(255,255,255);
+		-webkit-transform: translateY(-20px);
+	}
+}
+@-moz-keyframes bubblingG {
+	0% {
+		width: 10px;
+		height: 10px;
+		background-color:rgb(0,0,0);
+		-moz-transform: translateY(0);
+	}
+	100% {
+		width: 23px;
+		height: 23px;
+		background-color:rgb(255,255,255);
+		-moz-transform: translateY(-20px);
+	}
+}
     </style>
 
   </head>
@@ -27,10 +154,12 @@ body { background-image: url(/public/donuts.png) }
         <h1>🍩aaS</h1>
         <h4><em>Donuts as a Service</em></h4>
       </center>
-      <div class="btn-group pull-right">
-        <button id="buy-btn" type="button" class="btn btn-default">Buy</button>
-        <button id="clean-btn" type="button" class="btn btn-default">Clean</button>
-        <button id="restock-btn" type="button" class="btn btn-default">Restock</button>
+      <div id="navbar" class="row">
+        <div class="btn-group pull-right">
+          <button id="buy-btn" type="button" class="btn btn-default">Buy</button>
+          <button id="clean-btn" type="button" class="btn btn-default">Clean</button>
+          <button id="restock-btn" type="button" class="btn btn-default">Restock</button>
+        </div>
       </div>
       <div id="cleaner" class="row job">
         <div class="col-md-2">
@@ -41,8 +170,15 @@ body { background-image: url(/public/donuts.png) }
         </div>
         <div class="col-md-2">
           <form action="/clean" method="POST">
-            <input type="image" width="220" height="220" src="/public/fryer.jpg" class="img-thumbnail" />
+            <input type="image" src="/public/fryer.jpg" class="img-thumbnail" />
             <input class="btn btn-default" type="submit" value="Clean Fryer"/>
+            <div class="spinner hidden">
+              <div class="bubblingG">
+      	        <span id="bubblingG_1"></span>
+      	        <span id="bubblingG_2"></span>
+      	        <span id="bubblingG_3"></span>
+              </div>
+            </div>
           </form>
         </div>
       </div>
@@ -58,6 +194,13 @@ body { background-image: url(/public/donuts.png) }
             <input type="hidden" name="flavor" value="sprinkles"/>
             <input type="image" src="/public/donut-sprinkles.png" class="img-thumbnail" />
             <input class="btn btn-default" type="submit" value="Restock Sprinkles"/>
+            <div class="spinner hidden">
+              <div class="bubblingG">
+      	        <span id="bubblingG_1"></span>
+      	        <span id="bubblingG_2"></span>
+      	        <span id="bubblingG_3"></span>
+              </div>
+            </div>
           </form>
         </div>
         <div class="col-md-2">
@@ -65,6 +208,13 @@ body { background-image: url(/public/donuts.png) }
             <input type="hidden" name="flavor" value="cinnamon"/>
             <input type="image" src="/public/donut-cinn.jpg" class="img-thumbnail" />
             <input class="btn btn-default" type="submit" value="Restock Cinnamon"/>
+            <div class="spinner hidden">
+              <div class="bubblingG">
+      	        <span id="bubblingG_1"></span>
+      	        <span id="bubblingG_2"></span>
+      	        <span id="bubblingG_3"></span>
+              </div>
+            </div>
           </form>
         </div>
         <div class="col-md-2">
@@ -72,6 +222,13 @@ body { background-image: url(/public/donuts.png) }
             <input type="hidden" name="flavor" value="old-fashioned"/>
             <input type="image" src="/public/donut-old-fash.jpg" class="img-thumbnail" />
             <input class="btn btn-default" type="submit" value="Restock Old-Fashioned"/>
+            <div class="spinner hidden">
+              <div class="bubblingG">
+      	        <span id="bubblingG_1"></span>
+      	        <span id="bubblingG_2"></span>
+      	        <span id="bubblingG_3"></span>
+              </div>
+            </div>
           </form>
         </div>
       </div>
@@ -173,6 +330,10 @@ $("#restock-btn").click(function(evt) {
   localStorage.setItem("job","#restocker")
   $(".job").hide()
   $("#restocker").show()
+})
+
+$("form").submit(function(event){
+  $(event.target).children(".spinner").removeClass("hidden")
 })
 
 setInterval(function(){

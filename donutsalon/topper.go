@@ -40,7 +40,7 @@ func (t *Topper) SprinkleTopping(ctx context.Context) error {
 		return err
 	}
 	span.LogEvent(fmt.Sprint("starting donut topping: ", span.BaggageItem(donutOriginKey)))
-	SleepGaussian(t.duration)
+	SleepGaussian(t.duration, t.lock.QueueLength())
 	t.quantity--
 	return nil
 }
@@ -53,7 +53,7 @@ func (t *Topper) Restock(ctx context.Context) {
 	defer t.lock.Unlock()
 
 	span.LogEvent(fmt.Sprint("restocking donut topping: ", span.BaggageItem(donutOriginKey)))
-	SleepGaussian(t.duration * 10)
+	SleepGaussian(t.duration*10, t.lock.QueueLength())
 	t.quantity++
 }
 

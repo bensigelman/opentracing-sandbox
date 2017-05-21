@@ -5,9 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
-	"math/rand"
 	"net/http"
 	"time"
+
+	"math"
 
 	lightstep "github.com/lightstep/lightstep-tracer-go"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -15,7 +16,8 @@ import (
 )
 
 const (
-	donutOriginKey = "origin"
+	donutOriginKey   = "origin"
+	maxQueueDuration = float64(2 * time.Second)
 )
 
 var (
@@ -29,8 +31,10 @@ var (
 	cleanerProcesses   = flag.Int("clean", 1, "")
 )
 
-func SleepGaussian(d time.Duration) {
-	time.Sleep(d + time.Duration((float64(d)/3)*rand.NormFloat64()))
+func SleepGaussian(d time.Duration, queueLength float64) {
+	cappedDuration := math.Min(float64(d), maxQueueDuration/queueLength)
+	//	noise := (float64(cappedDuration) / 3) * rand.NormFloat64()
+	time.Sleep(time.Duration(cappedDuration))
 }
 
 func currentDir() string {
@@ -117,7 +121,7 @@ func backgroundProcess(max int, ds *DonutService, f func(flavor string, ds *Donu
 
 func runFakeUser(flavor string, ds *DonutService) {
 	for {
-		SleepGaussian(250 * time.Millisecond)
+		SleepGaussian(250*time.Millisecond, 1)
 		span := ds.tracer.StartSpan(fmt.Sprintf("background_order[%s]", flavor))
 		ds.makeDonut(span.Context(), flavor)
 		span.Finish()
@@ -126,7 +130,7 @@ func runFakeUser(flavor string, ds *DonutService) {
 
 func runFakeRestocker(flavor string, ds *DonutService) {
 	for {
-		SleepGaussian(500 * time.Millisecond)
+		SleepGaussian(500*time.Millisecond, 1)
 		span := ds.tracer.StartSpan(fmt.Sprintf("background_restocker[%s]", flavor))
 		ds.restock(span.Context(), flavor)
 		span.Finish()
@@ -135,7 +139,7 @@ func runFakeRestocker(flavor string, ds *DonutService) {
 
 func runFakeCleaner(flavor string, ds *DonutService) {
 	for {
-		SleepGaussian(time.Second)
+		SleepGaussian(time.Second, 1)
 		span := ds.tracer.StartSpan("background_cleaner")
 		ds.cleanFryer(span.Context())
 		span.Finish()
