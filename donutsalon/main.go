@@ -17,7 +17,7 @@ import (
 
 const (
 	donutOriginKey   = "origin"
-	maxQueueDuration = float64(2 * time.Second)
+	maxQueueDuration = float64(8 * time.Second)
 )
 
 var (
@@ -32,7 +32,10 @@ var (
 )
 
 func SleepGaussian(d time.Duration, queueLength float64) {
-	cappedDuration := math.Min(float64(d), maxQueueDuration/queueLength)
+	cappedDuration := float64(d)
+	if queueLength > 5 {
+		cappedDuration = math.Min(cappedDuration, maxQueueDuration/(queueLength-5))
+	}
 	//	noise := (float64(cappedDuration) / 3) * rand.NormFloat64()
 	time.Sleep(time.Duration(cappedDuration))
 }
@@ -90,8 +93,8 @@ func main() {
 
 	// Make fake queries in the background.
 	backgroundProcess(*orderProcesses, ds, runFakeUser)
-	backgroundProcess(*restockerProcesses, ds, runFakeRestocker)
-	backgroundProcess(*cleanerProcesses, ds, runFakeCleaner)
+	// backgroundProcess(*restockerProcesses, ds, runFakeRestocker)
+	// backgroundProcess(*cleanerProcesses, ds, runFakeCleaner)
 
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/make_donut", ds.handleRequest)
@@ -111,7 +114,7 @@ func backgroundProcess(max int, ds *DonutService, f func(flavor string, ds *Donu
 		case 0:
 			flavor = "cinnamon"
 		case 1:
-			flavor = "old-fashioned"
+			flavor = "chocolate"
 		case 2:
 			flavor = "sprinkles"
 		}
@@ -121,7 +124,7 @@ func backgroundProcess(max int, ds *DonutService, f func(flavor string, ds *Donu
 
 func runFakeUser(flavor string, ds *DonutService) {
 	for {
-		SleepGaussian(250*time.Millisecond, 1)
+		SleepGaussian(1500*time.Millisecond, 1)
 		span := ds.tracer.StartSpan(fmt.Sprintf("background_order[%s]", flavor))
 		ds.makeDonut(span.Context(), flavor)
 		span.Finish()
@@ -130,7 +133,7 @@ func runFakeUser(flavor string, ds *DonutService) {
 
 func runFakeRestocker(flavor string, ds *DonutService) {
 	for {
-		SleepGaussian(500*time.Millisecond, 1)
+		SleepGaussian(1500*time.Millisecond, 1)
 		span := ds.tracer.StartSpan(fmt.Sprintf("background_restocker[%s]", flavor))
 		ds.restock(span.Context(), flavor)
 		span.Finish()

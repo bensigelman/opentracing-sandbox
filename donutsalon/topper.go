@@ -53,8 +53,8 @@ func (t *Topper) Restock(ctx context.Context) {
 	defer t.lock.Unlock()
 
 	span.LogEvent(fmt.Sprint("restocking donut topping: ", span.BaggageItem(donutOriginKey)))
-	SleepGaussian(t.duration*10, t.lock.QueueLength())
-	t.quantity++
+	SleepGaussian(t.duration*3, t.lock.QueueLength())
+	t.quantity += 20
 }
 
 func (t *Topper) Quantity(parentSpan opentracing.Span) int {

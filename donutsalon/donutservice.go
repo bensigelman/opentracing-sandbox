@@ -15,9 +15,9 @@ import (
 )
 
 const (
-	fryDuration = time.Millisecond * 100
-	payDuration = time.Millisecond * 200
-	topDuration = time.Millisecond * 110
+	fryDuration = time.Millisecond * 200
+	payDuration = time.Millisecond * 250
+	topDuration = time.Millisecond * 350
 )
 
 type DonutService struct {

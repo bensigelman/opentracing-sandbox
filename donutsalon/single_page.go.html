@@ -2,7 +2,7 @@
   <meta charset="ISO-8859-1">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
   <head>
-    <title>DonutSalon: 🍩aaS in HyperGrowth</title>
+    <title>DonutZone: 🍩aaS in HyperGrowth</title>
     <script src="/public/opentracing-browser.js"></script>
     <script src="/public/lightstep-tracer.js"></script>
     <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
@@ -219,9 +219,9 @@ body { background-image: url(/public/donuts.png) }
         </div>
         <div class="col-md-2">
           <form action="/restock" method="POST">
-            <input type="hidden" name="flavor" value="old-fashioned"/>
-            <input type="image" src="/public/donut-old-fash.jpg" class="img-thumbnail" />
-            <input class="btn btn-default" type="submit" value="Restock Old-Fashioned"/>
+            <input type="hidden" name="flavor" value="chocolate"/>
+            <input type="image" src="/public/donut-choc.jpg" class="img-thumbnail" />
+            <input class="btn btn-default" type="submit" value="Restock Chocolate"/>
             <div class="spinner hidden">
               <div class="bubblingG">
       	        <span id="bubblingG_1"></span>
@@ -254,8 +254,8 @@ body { background-image: url(/public/donuts.png) }
         <div class="col-md-2">
           <img
              class="img-thumbnail donut-button"
-             src="/public/donut-old-fash.jpg"
-             data-flavor="old-fashioned">
+             src="/public/donut-choc.jpg"
+             data-flavor="chocolate">
         </div>
       </div>
       <div id="donut-log" class="lead">
@@ -268,11 +268,11 @@ body { background-image: url(/public/donuts.png) }
 var clientUUID = Math.round(Math.random() * 10000);
 
 Tracer.initGlobalTracer(LightStep.tracer({
-  access_token         : 'DEVELOPMENT_TOKEN_bhs',
+  access_token         : '32f6abfbe2ec8ef46eb55eab21c785f4',
   component_name       : 'donut-browser',
-  collector_host       : 'localhost',
-  collector_port       : 9998,
-  collector_encryption : 'none',
+  collector_host       : 'collector-loadtest.lightstep.com',
+  collector_port       : 443,
+  collector_encryption : 'tls',
   xhr_instrumentation  : false,
 }));
 
