@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"time"
 
 	"golang.org/x/net/context"
@@ -32,7 +33,7 @@ func (f *Fryer) FryDonut(ctx context.Context) {
 	defer f.lock.Unlock()
 
 	span.LogEvent(fmt.Sprint("starting to fry: ", span.BaggageItem(donutOriginKey)))
-	SleepGaussian(f.duration+time.Duration(f.oilLevel)*time.Millisecond, f.lock.QueueLength())
+	SleepGaussian(f.duration+time.Duration(math.Min(500, float64(f.oilLevel)))*time.Millisecond, f.lock.QueueLength())
 	f.oilLevel++
 }
 
@@ -43,7 +44,7 @@ func (f *Fryer) ChangeOil(ctx context.Context) {
 	f.lock.Lock(span)
 	defer f.lock.Unlock()
 
-	SleepGaussian(f.duration*100, 0) // f.lock.QueueLength())
+	SleepGaussian(f.duration*100, f.lock.QueueLength())
 	f.oilLevel = f.oilLevel / 2
 }
 

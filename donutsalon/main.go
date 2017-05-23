@@ -27,7 +27,7 @@ var (
 	collectorHost      = flag.String("collector_host", "localhost", "")
 	collectorPort      = flag.Int("collector_port", 9997, "")
 	tracerType         = flag.String("tracer_type", "lightstep", "")
-	orderProcesses     = flag.Int("order", 2, "")
+	orderProcesses     = flag.Int("order", 1, "")
 	restockerProcesses = flag.Int("restock", 0, "")
 	cleanerProcesses   = flag.Int("clean", 0, "")
 )
