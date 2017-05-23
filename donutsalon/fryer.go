@@ -44,7 +44,11 @@ func (f *Fryer) ChangeOil(ctx context.Context) {
 	f.lock.Lock(span)
 	defer f.lock.Unlock()
 
-	SleepGaussian(f.duration*100, f.lock.QueueLength())
+	if f.oilLevel < 20 {
+		SleepGaussian(f.duration*50, f.lock.QueueLength())
+	} else {
+		SleepGaussian(f.duration*50, 0)
+	}
 	f.oilLevel = f.oilLevel / 2
 }
 
