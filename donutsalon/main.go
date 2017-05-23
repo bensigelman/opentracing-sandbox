@@ -21,14 +21,15 @@ const (
 )
 
 var (
+	baseDir            = flag.String("basedir", "./github.com/bhs/opentracing-sandbox/donutsalon/", "")
 	accessToken        = flag.String("token", "{your_access_token}", "")
 	port               = flag.Int("port", 80, "")
 	collectorHost      = flag.String("collector_host", "localhost", "")
 	collectorPort      = flag.Int("collector_port", 9997, "")
 	tracerType         = flag.String("tracer_type", "lightstep", "")
-	orderProcesses     = flag.Int("order", 6, "")
-	restockerProcesses = flag.Int("restock", 3, "")
-	cleanerProcesses   = flag.Int("clean", 1, "")
+	orderProcesses     = flag.Int("order", 2, "")
+	restockerProcesses = flag.Int("restock", 0, "")
+	cleanerProcesses   = flag.Int("clean", 0, "")
 )
 
 func SleepGaussian(d time.Duration, queueLength float64) {
@@ -40,20 +41,20 @@ func SleepGaussian(d time.Duration, queueLength float64) {
 	time.Sleep(time.Duration(cappedDuration))
 }
 
-func currentDir() string {
-	// return "github.com/bhs/opentracing-sandbox/donutsalon/"
-	return "./"
-}
-func rootHandler(w http.ResponseWriter, r *http.Request) {
-	t, err := template.New("").ParseFiles(currentDir() + "single_page.go.html")
-	if err != nil {
-		panic(err)
+func dumbPageHandler(pageBasename string) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		t, err := template.New("").ParseFiles(
+			*baseDir+pageBasename+".go.html",
+			*baseDir+"header.go.html",
+			*baseDir+"status.go.html")
+		if err != nil {
+			panic(err)
+		}
+		err = t.ExecuteTemplate(w, pageBasename+".go.html", nil)
+		if err != nil {
+			panic(err)
+		}
 	}
-	err = t.ExecuteTemplate(w, "single_page.go.html", nil)
-	if err != nil {
-		panic(err)
-	}
-
 }
 
 type TracerGenerator func(component string) opentracing.Tracer
@@ -93,15 +94,17 @@ func main() {
 
 	// Make fake queries in the background.
 	backgroundProcess(*orderProcesses, ds, runFakeUser)
-	// backgroundProcess(*restockerProcesses, ds, runFakeRestocker)
-	// backgroundProcess(*cleanerProcesses, ds, runFakeCleaner)
+	backgroundProcess(*restockerProcesses, ds, runFakeRestocker)
+	backgroundProcess(*cleanerProcesses, ds, runFakeCleaner)
 
-	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/make_donut", ds.handleRequest)
+	http.HandleFunc("/", dumbPageHandler("order"))
+	http.HandleFunc("/clean", dumbPageHandler("clean"))
+	http.HandleFunc("/restock", dumbPageHandler("restock"))
+	http.HandleFunc("/api/order", ds.webOrder)
 	http.HandleFunc("/status", ds.handleState)
-	http.HandleFunc("/clean", ds.handleClean)
-	http.HandleFunc("/restock", ds.handleRestock)
-	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir(currentDir()+"public/"))))
+	http.HandleFunc("/api/clean", ds.webClean)
+	http.HandleFunc("/api/restock", ds.webRestock)
+	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir(*baseDir+"public/"))))
 	fmt.Println("Starting on :", *port)
 	err := http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
 	fmt.Println("Exiting", err)
@@ -124,7 +127,7 @@ func backgroundProcess(max int, ds *DonutService, f func(flavor string, ds *Donu
 
 func runFakeUser(flavor string, ds *DonutService) {
 	for {
-		SleepGaussian(1500*time.Millisecond, 1)
+		SleepGaussian(2500*time.Millisecond, 1)
 		span := ds.tracer.StartSpan(fmt.Sprintf("background_order[%s]", flavor))
 		ds.makeDonut(span.Context(), flavor)
 		span.Finish()
@@ -133,7 +136,7 @@ func runFakeUser(flavor string, ds *DonutService) {
 
 func runFakeRestocker(flavor string, ds *DonutService) {
 	for {
-		SleepGaussian(1500*time.Millisecond, 1)
+		SleepGaussian(20000*time.Millisecond, 1)
 		span := ds.tracer.StartSpan(fmt.Sprintf("background_restocker[%s]", flavor))
 		ds.restock(span.Context(), flavor)
 		span.Finish()
