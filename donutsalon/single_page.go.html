@@ -314,6 +314,11 @@ $(".donut-button").click(function(evt) {
       var after = Date.now();
       span.finish();
       freshDonut.html('<span style="color:#aa3333">Out of <b>' + flavor + '</b> 🍩</span>');
+      setTimeout(function(){
+          $(freshDonut).fadeOut("slow",function(){
+            $(freshDonut).remove();
+          });
+      },7000);
     },
   });
 });
