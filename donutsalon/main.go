@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"html/template"
 	"net/http"
 	"time"
 
@@ -39,22 +38,6 @@ func SleepGaussian(d time.Duration, queueLength float64) {
 	}
 	//	noise := (float64(cappedDuration) / 3) * rand.NormFloat64()
 	time.Sleep(time.Duration(cappedDuration))
-}
-
-func dumbPageHandler(pageBasename string) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		t, err := template.New("").ParseFiles(
-			*baseDir+pageBasename+".go.html",
-			*baseDir+"header.go.html",
-			*baseDir+"status.go.html")
-		if err != nil {
-			panic(err)
-		}
-		err = t.ExecuteTemplate(w, pageBasename+".go.html", nil)
-		if err != nil {
-			panic(err)
-		}
-	}
 }
 
 type TracerGenerator func(component string) opentracing.Tracer
@@ -97,9 +80,9 @@ func main() {
 	backgroundProcess(*restockerProcesses, ds, runFakeRestocker)
 	backgroundProcess(*cleanerProcesses, ds, runFakeCleaner)
 
-	http.HandleFunc("/", dumbPageHandler("order"))
-	http.HandleFunc("/clean", dumbPageHandler("clean"))
-	http.HandleFunc("/restock", dumbPageHandler("restock"))
+	http.HandleFunc("/", ds.pageHandler("order"))
+	http.HandleFunc("/clean", ds.pageHandler("clean"))
+	http.HandleFunc("/restock", ds.pageHandler("restock"))
 	http.HandleFunc("/api/order", ds.webOrder)
 	http.HandleFunc("/status", ds.handleState)
 	http.HandleFunc("/api/clean", ds.webClean)

@@ -11,30 +11,30 @@
         <h4><em>Donuts as a Service</em></h4>
       </center>
 
-     {{template "status.go.html"}}
+     {{template "status.go.html" .}}
 
       <div class="row job">
-        <div class="col-md-2">
+        <div class="col-xs-4 col-md-4">
           <img
              class="img-thumbnail action-button donut-button"
              src="/public/donut-sprinkles.png"
              data-flavor="sprinkles">
         </div>
-        <div class="col-md-2">
+        <div class="col-xs-4 col-md-4">
           <img
              class="img-thumbnail action-button donut-button"
              src="/public/donut-cinn.jpg"
              data-flavor="cinnamon">
         </div>
-        <div class="col-md-2">
+        <div class="col-xs-4 col-md-4">
           <img
              class="img-thumbnail action-button donut-button"
              src="/public/donut-choc.jpg"
              data-flavor="chocolate">
         </div>
       </div>
-      <div id="donut-log" class="lead">
-      </div>
+      
+      <div id="donut-log" class="lead"></div>
 
       <div class="row footer">
         <div class="col-xs-12">
@@ -75,15 +75,24 @@ $(".donut-button").click(function(evt) {
       var after = Date.now();
       span.finish();
       orderStatus.html('Received <b>' + flavor + '</b> 🍩 (after ' + (after-before) + 'ms)');
+      fadeElement(orderStatus)
     },
     error: function() {
       var after = Date.now();
       span.finish();
       orderStatus.html('<span style="color:#aa3333">Out of <b>' + flavor + '</b> 🍩</span>');
+      fadeElement(orderStatus)
     },
   });
 });
 
+function fadeElement(elem){
+  setTimeout(function(){
+    $(elem).fadeOut("slow", function(){
+      $(elem).remove();
+    });
+  },7000);
+}
   </script>
 
 </html>
