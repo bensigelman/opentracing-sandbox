@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"net/http"
 	"time"
 
@@ -19,6 +20,11 @@ const (
 	payDuration = time.Millisecond * 250
 	topDuration = time.Millisecond * 350
 )
+
+type State struct {
+	OilLevel  int
+	Inventory map[string]int
+}
 
 type DonutService struct {
 	tracer    opentracing.Tracer
@@ -41,7 +47,19 @@ func newDonutService(tracerGen TracerGenerator) *DonutService {
 	}
 }
 
-func (ds *DonutService) handleRequest(w http.ResponseWriter, r *http.Request) {
+func (ds *DonutService) handleRoot(w http.ResponseWriter, r *http.Request) {
+	t, err := template.New("").ParseFiles(currentDir() + "single_page.go.html")
+	if err != nil {
+		panic(err)
+	}
+	err = t.ExecuteTemplate(w, "single_page.go.html", ds.state())
+	if err != nil {
+		panic(err)
+	}
+
+}
+
+func (ds *DonutService) handleOrder(w http.ResponseWriter, r *http.Request) {
 	carrier := opentracing.HTTPHeadersCarrier(r.Header)
 	clientContext, _ := ds.tracer.Extract(opentracing.HTTPHeaders, carrier)
 
@@ -64,16 +82,9 @@ func (ds *DonutService) handleRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ds *DonutService) handleState(w http.ResponseWriter, r *http.Request) {
-	state := struct {
-		OilLevel  int
-		Inventory map[string]int
-	}{
-		OilLevel:  ds.fryer.OilLevel(),
-		Inventory: ds.inventory(),
-	}
+	state := ds.state()
 	data, err := json.Marshal(state)
 	panicErr(err)
-
 	w.Write(data)
 }
 
@@ -98,6 +109,13 @@ func (ds *DonutService) makeDonut(parentSpanContext opentracing.SpanContext, fla
 	ds.payer.BuyDonut(ctx)
 	ds.fryer.FryDonut(ctx)
 	return ds.addTopping(donutSpan, flavor)
+}
+
+func (ds *DonutService) state() *State {
+	return &State{
+		OilLevel:  ds.fryer.OilLevel(),
+		Inventory: ds.inventory(),
+	}
 }
 
 func (ds *DonutService) addTopping(span opentracing.Span, flavor string) error {

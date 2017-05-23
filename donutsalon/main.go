@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"html/template"
 	"net/http"
 	"time"
 
@@ -44,24 +43,14 @@ func currentDir() string {
 	// return "github.com/bhs/opentracing-sandbox/donutsalon/"
 	return "./"
 }
-func rootHandler(w http.ResponseWriter, r *http.Request) {
-	t, err := template.New("").ParseFiles(currentDir() + "single_page.go.html")
-	if err != nil {
-		panic(err)
-	}
-	err = t.ExecuteTemplate(w, "single_page.go.html", nil)
-	if err != nil {
-		panic(err)
-	}
-
-}
 
 type TracerGenerator func(component string) opentracing.Tracer
 
 func main() {
 	flag.Parse()
 	var tracerGen TracerGenerator
-	if *tracerType == "lightstep" {
+	switch *tracerType {
+	case "lightstep":
 		tracerGen = func(component string) opentracing.Tracer {
 			return lightstep.NewTracer(lightstep.Options{
 				AccessToken: *accessToken,
@@ -75,7 +64,7 @@ func main() {
 				},
 			})
 		}
-	} else if *tracerType == "zipkin" {
+	case "zipkin":
 		tracerGen = func(component string) opentracing.Tracer {
 			collector, _ := zipkin.NewHTTPCollector(
 				fmt.Sprintf("http://donutsalon.com:9411/api/v1/spans"))
@@ -86,7 +75,7 @@ func main() {
 		t := tracerGen("foo")
 		sp := t.StartSpan("blah")
 		sp.Finish()
-	} else {
+	default:
 		panic(*tracerType)
 	}
 	ds := newDonutService(tracerGen)
@@ -96,12 +85,13 @@ func main() {
 	// backgroundProcess(*restockerProcesses, ds, runFakeRestocker)
 	// backgroundProcess(*cleanerProcesses, ds, runFakeCleaner)
 
-	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/make_donut", ds.handleRequest)
+	http.HandleFunc("/", ds.handleRoot)
+	http.HandleFunc("/make_donut", ds.handleOrder)
 	http.HandleFunc("/status", ds.handleState)
 	http.HandleFunc("/clean", ds.handleClean)
 	http.HandleFunc("/restock", ds.handleRestock)
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir(currentDir()+"public/"))))
+
 	fmt.Println("Starting on :", *port)
 	err := http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
 	fmt.Println("Exiting", err)
