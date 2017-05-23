@@ -33,7 +33,6 @@ func (t *Topper) SprinkleTopping(ctx context.Context) error {
 	defer span.Finish()
 
 	t.lock.Lock(span)
-	defer t.lock.Unlock()
 	if t.quantity < 1 {
 		err := fmt.Errorf("out of %s", t.donutType)
 		span.LogFields(log.Error(err))
@@ -42,6 +41,9 @@ func (t *Topper) SprinkleTopping(ctx context.Context) error {
 	span.LogEvent(fmt.Sprint("starting donut topping: ", span.BaggageItem(donutOriginKey)))
 	SleepGaussian(t.duration, t.lock.QueueLength())
 	t.quantity--
+
+	t.lock.Unlock()
+
 	return nil
 }
 
@@ -50,11 +52,12 @@ func (t *Topper) Restock(ctx context.Context) {
 	defer span.Finish()
 
 	t.lock.Lock(span)
-	defer t.lock.Unlock()
 
 	span.LogEvent(fmt.Sprint("restocking donut topping: ", span.BaggageItem(donutOriginKey)))
 	SleepGaussian(t.duration*3, t.lock.QueueLength())
 	t.quantity += 10
+
+	t.lock.Unlock()
 }
 
 func (t *Topper) Quantity(parentSpan opentracing.Span) int {

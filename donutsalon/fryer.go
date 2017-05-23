@@ -30,11 +30,12 @@ func (f *Fryer) FryDonut(ctx context.Context) {
 	defer span.Finish()
 
 	f.lock.Lock(span)
-	defer f.lock.Unlock()
 
 	span.LogEvent(fmt.Sprint("starting to fry: ", span.BaggageItem(donutOriginKey)))
 	SleepGaussian(f.duration+time.Duration(math.Min(500, float64(f.oilLevel)))*time.Millisecond, f.lock.QueueLength())
 	f.oilLevel++
+
+	f.lock.Unlock()
 }
 
 func (f *Fryer) ChangeOil(ctx context.Context) {
@@ -42,14 +43,14 @@ func (f *Fryer) ChangeOil(ctx context.Context) {
 	defer span.Finish()
 
 	f.lock.Lock(span)
-	defer f.lock.Unlock()
-
 	if f.oilLevel < 20 {
 		SleepGaussian(f.duration*50, f.lock.QueueLength())
 	} else {
 		SleepGaussian(f.duration*50, 0)
 	}
 	f.oilLevel = f.oilLevel / 2
+
+	f.lock.Unlock()
 }
 
 func (f *Fryer) OilLevel() int {
