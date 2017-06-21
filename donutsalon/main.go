@@ -5,9 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	_ "net/http/pprof"
 	"time"
-
-	"math"
 
 	lightstep "github.com/lightstep/lightstep-tracer-go"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -33,8 +32,9 @@ var (
 
 func SleepGaussian(d time.Duration, queueLength float64) {
 	cappedDuration := float64(d)
-	if queueLength > 5 {
-		cappedDuration = math.Min(cappedDuration, maxQueueDuration/(queueLength-5))
+	if queueLength > 4 {
+		// cappedDuration = math.Min(cappedDuration, maxQueueDuration/(queueLength-5))
+		cappedDuration = float64(time.Millisecond * 30)
 	}
 	//	noise := (float64(cappedDuration) / 3) * rand.NormFloat64()
 	time.Sleep(time.Duration(cappedDuration))
