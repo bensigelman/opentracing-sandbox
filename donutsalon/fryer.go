@@ -27,7 +27,6 @@ func newFryer(tracerGen TracerGenerator, duration time.Duration) *Fryer {
 
 func (f *Fryer) FryDonut(ctx context.Context) {
 	span := startSpanFronContext("fry_donut", f.tracer, ctx)
-	defer span.Finish()
 
 	f.lock.Lock(span)
 
@@ -36,21 +35,24 @@ func (f *Fryer) FryDonut(ctx context.Context) {
 	f.oilLevel++
 
 	f.lock.Unlock()
+	span.Finish()
 }
 
 func (f *Fryer) ChangeOil(ctx context.Context) {
 	span := startSpanFronContext("change_oil", f.tracer, ctx)
-	defer span.Finish()
 
 	f.lock.Lock(span)
-	if f.oilLevel < 20 {
-		SleepGaussian(f.duration*50, f.lock.QueueLength())
+	if f.oilLevel < 10 {
+		SleepGaussian(f.duration*5, f.lock.QueueLength())
 	} else {
-		SleepGaussian(f.duration*50, 0)
+		for c := 0; c < 10; c++ {
+			SleepGaussian(f.duration*5, 0)
+		}
 	}
 	f.oilLevel = f.oilLevel / 2
 
 	f.lock.Unlock()
+	span.Finish()
 }
 
 func (f *Fryer) OilLevel() int {

@@ -32,20 +32,20 @@ func NewSmartLock(cont bool) *SmartLock {
 }
 
 func (sl *SmartLock) Lock(activeSpan opentracing.Span) {
-	sl.activeSpan = activeSpan
 	if sl.cont {
-		sl.activeSpan.SetTag("c:", sl.lockID)
+		activeSpan.SetTag("c:", sl.lockID)
 	}
 	atomic.AddInt64(&sl.queueLength, 1)
 	sl.realLock.Lock()
+	sl.activeSpan = activeSpan
 	atomic.AddInt64(&sl.queueLength, -1)
 	sl.acquired = time.Now()
 }
 
 func (sl *SmartLock) Unlock() {
-	sl.realLock.Unlock()
 	released := time.Now()
 	sl.activeSpan.SetTag("weight", int(released.Sub(sl.acquired).Seconds()*1000.0+1))
+	sl.realLock.Unlock()
 }
 
 func (sl *SmartLock) QueueLength() float64 {
